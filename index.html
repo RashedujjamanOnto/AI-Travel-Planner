@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Travel Planner 🌍</title>
+<title>AI Super Travel Planner 🚀</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-/* --- STYLES --- */
+/* --- STYLES (Kept Minimalist & Clean) --- */
 body {
     font-family: 'Inter', sans-serif;
     background: linear-gradient(135deg,#e0f7fa,#ffffff);
@@ -30,7 +31,7 @@ h1{
     font-size:2.6rem;
     margin-bottom:0.3rem;
 }
-/* FORM STYLES - Improved Spacing */
+/* FORM STYLES */
 .form-group {
     display:flex;
     flex-wrap:wrap;
@@ -43,27 +44,18 @@ h1{
     display: flex;
     flex-direction: column;
 }
-.form-field.full-width {
-    flex: 1 1 100%;
-}
 .form-field label{
     font-size:0.95rem;
     margin-bottom:10px; 
     color:#555;
     font-weight: 600;
 }
-input[type="text"], input[type="number"], input[type="password"] {
+input[type="text"], input[type="number"], input[type="password"], input[type="date"], select {
     padding:0.9rem 1rem;
     border-radius:10px;
     border:1px solid #ccc;
     font-size:1rem;
     width: 80%;
-}
-input[type="text"], input[type="number"] {
-    width: 80%;
-}
-input[type="password"] {
-    width: 90%;
 }
 .icon-input {
     position: relative;
@@ -75,7 +67,7 @@ input[type="password"] {
     left: 15px;
     color: #00bfa5;
 }
-.icon-input input {
+.icon-input input, .icon-input select {
     padding-left: 40px; 
 }
 .checkbox-group {
@@ -96,7 +88,7 @@ button{
     margin-top: 10px;
     margin-right: 38px;
 }
-/* OUTPUT STYLES - Improved Spacing and Clutter */
+/* OUTPUT STYLES */
 .output-section {
     margin-top: 3rem;
 }
@@ -109,6 +101,9 @@ button{
     box-shadow:0 10px 25px rgba(0,0,0,0.08);
     margin-right: 38px;
 }
+.weather-card { border-left: 6px solid #f57c00; background-color: #fff3e0; }
+.tools-card { border-left: 6px solid #607d8b; background-color: #eceff1; }
+
 .card h2 {
     color:#00695c;
     margin-bottom:1rem;
@@ -116,18 +111,13 @@ button{
     border-bottom: 2px solid #00bfa550;
     padding-bottom: 10px;
 }
-.card h3 {
-    color:#00796b;
-    margin-top: 1.5rem; 
-    margin-bottom:0.8rem;
-    font-size:1.3rem;
-}
 .itinerary-day {
-    margin-top: 2rem; 
     padding: 1.5rem;
     border: 1px solid #eee;
     border-radius: 8px;
+    margin-top: 15px;
 }
+/* Dynamic Styling for missing data */
 .time-slot {
     margin-bottom: 1.5rem; 
     border-left: 4px solid #00bfa5;
@@ -141,36 +131,193 @@ button{
     font-size: 0.9rem;
     border: 1px dashed #00bfa5;
 }
-.cost-breakdown li {
-    list-style-type: none;
-    padding-left: 10px;
-    border-left: 3px solid #00bfa5;
-    margin-bottom: 0.5rem;
+/* Expense Tracker Styles */
+#expenseTracker {
+    background: #e0f7fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
 }
-#pdfDownloadBtn {
-    background: linear-gradient(90deg, #d32f2f, #b71c1c); 
-    margin-top: 20px;
-    box-shadow:0 8px 20px rgba(211,47,47,0.3);
+.expense-entry {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
 }
-#loading {
-    display: none;
-    text-align: center;
-    font-weight: bold;
-    color: #f57c00;
-    margin-top: 1rem;
-    margin-bottom: 16px;
+#totalExpense {
     font-size: 1.2rem;
+    font-weight: bold;
+    color: #d32f2f;
+    margin-top: 10px;
 }
 /* Utility class for PDF: hides elements in PDF output */
 .hide-in-pdf {
     display: none;
+}
+.daily-weather-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-bottom: 1px dashed #f57c0050;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.daily-weather-item:last-child {
+    border-bottom: none;
+}
+/* --- STYLES (Kept Minimalist & Clean) --- */
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg,#e0f7fa,#ffffff);
+    margin:0; padding:0;
+    color:#333;
+}
+.container {
+    max-width:1000px;
+    margin:3rem auto;
+    padding:10px 15px 10px 50px;
+    background:#fff;
+    border-radius:25px;
+    box-shadow:0 25px 50px rgba(0,0,0,0.1);
+}
+h1{
+    text-align:center;
+    color:#00695c;
+    font-size:2.6rem;
+    margin-bottom:0.3rem;
+}
+/* FORM STYLES */
+.form-group {
+    display:flex;
+    flex-wrap:wrap;
+    gap: 0.8rem 1.5rem; 
+    margin-bottom:1.2rem;
+    justify-content: space-between; 
+}
+.form-field {
+    flex: 1 1 45%; 
+    display: flex;
+    flex-direction: column;
+}
+input[type="text"], input[type="number"], input[type="password"], input[type="date"], select {
+    padding:0.9rem 1rem;
+    border-radius:10px;
+    border:1px solid #ccc;
+    font-size:1rem;
+    width: 80%;
+}
+.icon-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.icon-input i {
+    position: absolute;
+    left: 15px;
+    color: #00bfa5;
+}
+.icon-input input, .icon-input select {
+    padding-left: 40px; 
+}
+.checkbox-group {
+    display: flex;
+    gap: 20px;
+}
+button{
+    padding:1rem 2rem;
+    font-size:1.1rem;
+    background: linear-gradient(90deg,#00bfa5,#00695c);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    flex:1 1 100%;
+    font-weight:600;
+    box-shadow:0 8px 20px rgba(0,191,165,0.3);
+    margin-top: 10px;
+    margin-right: 38px;
+}
+/* OUTPUT STYLES */
+.output-section {
+    margin-top: 3rem;
+}
+.card {
+    background: #ffffff;
+    padding:2rem 2rem; 
+    margin-bottom:2.5rem; 
+    border-left:6px solid #00bfa5;
+    border-radius:10px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+    margin-right: 38px;
+}
+.weather-card { border-left: 6px solid #f57c00; background-color: #fff3e0; }
+.tools-card { border-left: 6px solid #607d8b; background-color: #eceff1; }
+
+.card h2 {
+    color:#00695c;
+    margin-bottom:1rem;
+    font-size:1.8rem;
+    border-bottom: 2px solid #00bfa550;
+    padding-bottom: 10px;
+}
+.itinerary-day {
+    padding: 1.5rem;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+/* Dynamic Styling for missing data */
+.time-slot {
+    margin-bottom: 1.5rem; 
+    border-left: 4px solid #00bfa5;
+    padding-left: 15px;
+}
+.transport-info {
+    background-color: #f0fff0;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    border: 1px dashed #00bfa5;
+}
+/* Expense Tracker Styles */
+#expenseTracker {
+    background: #e0f7fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+.expense-entry {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+#totalExpense {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #d32f2f;
+    margin-top: 10px;
+}
+/* Utility class for PDF: hides elements in PDF output */
+.hide-in-pdf {
+    display: none;
+}
+.daily-weather-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-bottom: 1px dashed #f57c0050;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.daily-weather-item:last-child {
+    border-bottom: none;
 }
 </style>
 </head>
 <body>
 <div class="container">
 <h1><i class="fas fa-route"></i> AI Travel Planner 🌍</h1>
-<p style="text-align: center;margin-bottom: 30px;">Plan your perfect trip based on your preferences.</p>
+<p style="text-align: center;margin-bottom: 30px;">Plan your perfect trip with advanced AI features.</p>
 
 <div class="form-group" style="display:none">
     <div class="form-field full-width">
@@ -178,6 +325,13 @@ button{
         <div class="icon-input">
             <i class="fas fa-lock"></i>
             <input type="password" id="apiKey" value="AIzaSyBZyjVSZ5sPbtwxvs5id5-exqZxDohaK5Q" placeholder="Enter your AIzaSy... key">
+        </div>
+    </div>
+    <div class="form-field full-width">
+        <label for="weatherApiKey"><i class="fas fa-cloud"></i> WeatherAPI.com Key</label>
+        <div class="icon-input">
+            <i class="fas fa-key"></i>
+            <input type="password" id="weatherApiKey" value="625bd1dc984f43199ff63536252510" placeholder="Enter your WeatherAPI key">
         </div>
     </div>
 </div>
@@ -201,17 +355,34 @@ button{
 
 <div class="form-group">
     <div class="form-field">
-        <label for="travelers"><i class="fas fa-users"></i> Number of Travelers</label>
+        <label for="startDate"><i class="fas fa-calendar-day"></i> Start Date</label>
         <div class="icon-input">
-            <i class="fas fa-user-friends"></i>
-            <input type="number" id="travelers" min="1" max="20" value="1">
+            <i class="fas fa-calendar-check"></i>
+            <input type="date" id="startDate" required>
         </div>
     </div>
     <div class="form-field">
-        <label for="days"><i class="fas fa-calendar-alt"></i> Number of Days</label>
+        <label for="endDate"><i class="fas fa-calendar-day"></i> End Date</label>
+        <div class="icon-input">
+            <i class="fas fa-calendar-times"></i>
+            <input type="date" id="endDate" required>
+        </div>
+    </div>
+</div>
+
+<div class="form-group">
+    <div class="form-field">
+        <label for="travelers"><i class="fas fa-users"></i> Number of Travelers</label>
+        <div class="icon-input">
+            <i class="fas fa-user-friends"></i>
+            <input type="number" id="travelers" min="1" max="20" placeholder="e.g., 2">
+        </div>
+    </div>
+    <div class="form-field">
+        <label for="days"><i class="fas fa-calendar-alt"></i> Number of Days (Auto-calculated)</label>
         <div class="icon-input">
             <i class="fas fa-calendar-day"></i>
-            <input type="number" id="days" min="1" max="30" value="2">
+            <input type="number" id="days" min="1" max="30" placeholder="Auto" readonly style="background-color: #f0f0f0;">
         </div>
     </div>
 </div>
@@ -221,19 +392,19 @@ button{
         <label for="budget"><i class="fas fa-money-bill-wave"></i> Budget (BDT)</label>
         <div class="icon-input">
             <i class="fas fa-money-bill"></i>
-            <input type="text" id="budget" placeholder="e.g., 50,000 BDT / Mid-range">
+            <input type="text" id="budget" placeholder="e.g., 30,000 BDT / Mid-range">
         </div>
     </div>
     <div class="form-field">
         <label for="preferences"><i class="fas fa-heart"></i> Preferences</label>
         <div class="icon-input">
             <i class="fas fa-tags"></i>
-            <input type="text" id="preferences" placeholder="adventure, cultural, relaxing">
+            <input type="text" id="preferences" placeholder="beach, cultural, food">
         </div>
     </div>
 </div>
 
-<div class="form-group full-width">
+<div class="form-group">
     <div class="form-field full-width">
         <label><i class="fas fa-leaf"></i> Options</label>
         <div class="checkbox-group">
@@ -261,10 +432,10 @@ button{
 </div>
 
 <div class="form-group">
-  <button id="generateBtn"><i class="fas fa-magic"></i> Generate Trip Plan</button>
+    <button id="generateBtn"><i class="fas fa-magic"></i> Generate Super Trip Plan</button>
 </div>
 
-<div id="loading">Generating your detailed itinerary please wait...</div>
+<div id="loading" style="display:none; text-align:center; color:#00695c; font-size:1.2rem; padding:20px;">Generating your detailed itinerary please wait...</div>
 <div id="output"></div>
 </div>
 
@@ -273,54 +444,142 @@ button{
 const generateBtn=document.getElementById('generateBtn');
 const output=document.getElementById('output');
 const loading=document.getElementById('loading');
+let currentTripData = null; // Store the last generated trip data
 
+// Utility to format date for Google Calendar (YYYYMMDD)
+function formatDateForCalendar(dateString) {
+    if (!dateString) return '';
+    return dateString.replace(/-/g, '');
+}
+
+// Utility to generate a list of dates for the range (YYYY-MM-DD)
+function getDateRange(startDateStr, endDateStr) {
+    const dates = [];
+    let currentDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+
+    while (currentDate <= endDate) {
+        dates.push(currentDate.toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return dates;
+}
 
 /* ---------------------------------
-   1. AI GENERATOR FUNCTION (STRICT JSON PROMPT)
-   --------------------------------- */
+    1. WEATHER API FUNCTION (UPDATED for better error handling)
+    --------------------------------- */
+async function fetchWeatherData(apiKey, location, date) {
+    // Check if location is valid (e.g., 'Dhaka' not empty)
+    if (!apiKey || !location || !date) return { error: 'Weather API key or location/date is missing. Please check the input fields.' };
+    
+    const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${location}&days=1&dt=${date}`;
+    try {
+        const response = await fetch(url);
+        
+        // Handle API-specific errors (e.g., invalid key, invalid city name)
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errorMessage = errorData.error ? errorData.error.message : `${response.status} ${response.statusText} (Network/Server Error)`;
+            // Provide a more descriptive error based on common issues
+            if (errorMessage.includes('API key is invalid') || errorMessage.includes('Key not valid')) {
+                return { error: `Invalid Weather API Key. Please check the 'WeatherAPI.com Key' input field.` };
+            }
+            if (errorMessage.includes('No matching location')) {
+                 return { error: `Location error: No weather data found for "${location}". Check spelling or use a major city name.` };
+            }
+            return { error: `Failed to fetch weather for ${date}: ${errorMessage}` };
+        }
+        
+        const data = await response.json();
+        
+        if (!data.forecast || data.forecast.forecastday.length === 0) {
+              return { error: `No forecast data found for ${date}. Check destination name.` };
+        }
+        
+        const forecast = data.forecast.forecastday[0].day;
+        return {
+            date: date,
+            condition: forecast.condition.text,
+            icon: `https:${forecast.condition.icon}`,
+            maxTemp: `${forecast.maxtemp_c}°C`,
+            minTemp: `${forecast.mintemp_c}°C`,
+            avgTemp: `${forecast.avgtemp_c}°C`
+        };
+    } catch(e) {
+        return { error: `An exception occurred while fetching weather data: ${e.message}` };
+    }
+}
+
+/* ---------------------------------
+    2. AI GENERATOR FUNCTION (UPDATED PROMPT)
+    --------------------------------- */
 async function generateTrip(){
     const key=document.getElementById('apiKey').value.trim();
-    const from=document.getElementById('from').value;
-    const to=document.getElementById('to').value;
+    const weatherApiKey=document.getElementById('weatherApiKey').value.trim();
+    const from=document.getElementById('from').value.trim();
+    const to=document.getElementById('to').value.trim();
+    const startDate=document.getElementById('startDate').value;
+    const endDate=document.getElementById('endDate').value;
     const travelers=document.getElementById('travelers').value;
     const days=document.getElementById('days').value;
-    const budget=document.getElementById('budget').value;
-    const preferences=document.getElementById('preferences').value;
+    const budget=document.getElementById('budget').value.trim();
+    const preferences=document.getElementById('preferences').value.trim();
     const eco=document.getElementById('eco').checked;
     const family=document.getElementById('family').checked;
-    const meal=document.getElementById('meal').value;
-    const special=document.getElementById('special').value;
+    const meal=document.getElementById('meal').value.trim();
+    const special=document.getElementById('special').value.trim();
 
     if(!key){alert('Please provide your Google Gen AI API Key!'); return;}
-    if(!from || !to || !travelers || !days){alert('Please fill in Starting Location, Destination, Travelers, and Days.'); return;}
+    if(!from || !to || !startDate || !endDate || !travelers || !days){alert('Please fill in all required fields: Location, Dates, Travelers, and Days.'); return;}
 
-    // Show loading text only after the button is clicked and validation passes
     loading.style.display='block'; 
     output.innerHTML='';
+    
+    // ----------------------------------------------------
+    // Fetch Daily Weather Data
+    // ----------------------------------------------------
+    const dateRange = getDateRange(startDate, endDate);
+    let allWeatherData = [];
+    if (weatherApiKey) {
+        for (const date of dateRange) {
+            const data = await fetchWeatherData(weatherApiKey, to, date);
+            allWeatherData.push(data); // Push data even if it contains an error
+        }
+    }
+    const dateRangeStr = `${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`;
 
-    // *** The final, strong prompt for BDT and valid links ***
-    const prompt=`You are an AI travel planner. Plan a trip from ${from} to ${to} for ${travelers} travelers for ${days} days. Preferences: ${preferences}. Budget: ${budget}. Eco-friendly: ${eco}. Family-friendly: ${family}. Meal: ${meal}. Special requests: ${special}.
+    // ********** AI PROMPT: Strict JSON and No-Placeholder Rule **********
+    // NOTE: CRITICAL RULE 4 is updated in prompt to encourage better links.
+    const prompt=`You are an AI super travel planner. Plan a trip from ${from} to ${to} for ${travelers} travelers for ${days} days, from ${startDate} to ${endDate}. Preferences: ${preferences}. Budget: ${budget}. Eco-friendly: ${eco}. Family-friendly: ${family}. Meal: ${meal}. Special requests: ${special}.
 
-    Generate the travel plan STRICTLY as a single JSON object. DO NOT include any text, markdown backticks (\`\`\`json), or other information outside of the JSON object.
+    Generate the travel plan STRICTLY as a single JSON object. DO NOT include any text, markdown backticks, or other information outside of the JSON object.
 
     All cost fields MUST be represented in BDT (Bangladeshi Taka).
 
-    The JSON object MUST contain the following 7 top-level keys:
+    CRITICAL RULE 1: For the "itinerary" section, every single field (activity, timing, entry_fee, transport type, transport cost, transport pickup) MUST have a realistic, specific value. **DO NOT use 'N/A', 'TBD', 'Generic', or empty strings.** Provide realistic estimates in BDT if needed (e.g., Cost: '50 BDT').
+
+    CRITICAL RULE 2: For the overall journey in "conceptual_transport_plan", provide details for the **most common modes between ${from} and ${to} (e.g., Air, Train, and Bus)**, including estimated **return trip costs for ${travelers} travelers** in BDT. The 'route' should list the options and the 'cost_estimate' should detail the price ranges for each. **The cost_estimate MUST be a clean STRING (e.g., "BDT 12,000 - 25,000"). DO NOT make it a JSON object.**
+
+    CRITICAL RULE 3: For the first morning slot on Day 1, which covers the main journey from ${from} to ${to}, the 'Activity' field **MUST** clearly list the **three transport modes (Air, Train, Bus)** and their general timing/cost, directing the user to the "Conceptual Transport Plan" section for full details.
+
+    CRITICAL RULE 4 (UPDATED): All links (itinerary activities, attractions, hotels) MUST be **direct and valid Google Maps URLs** that start with 'https://www.google.com/maps/' or **direct booking links**. **ABSOLUTELY AVOID using placeholders like 'http://googleusercontent.com/maps.google.com/6' or 'N/A'**. If a valid link cannot be created, use a descriptive search link instead (e.g., 'https://www.google.com/search?q=${to} beach').
+
+    CRITICAL RULE 5: For short-distance itinerary transport, use diverse and appropriate modes like **'Rickshaw', 'CNG', 'Taxi', or 'Local Bus'** along with realistic cost estimates (e.g., Cost: '150 BDT').
+
+    The JSON object MUST contain the following 12 top-level keys:
     1. "trip_name" (string)
     2. "duration" (string, e.g., "5 days")
-    3. "weather_forecast" (string, e.g., "Sunny, 25-30°C for the duration of the trip").
+    3. "weather_forecast" (string, a general forecast for the date range: "${dateRangeStr}").
     4. "estimated_total_cost" (object with 'summary' string and 'details' object: {'Hotel': '...', 'Food': '...', 'Transport': '...', 'Sightseeing': '...'}).
-    5. "hotel_suggestions" (array of 3 objects, each having: name, location, rating (e.g., 4.5/5), price_range (in BDT), booking_link (MUST be a direct, working URL)).
-    6. "meal_suggestions" (array of 3 objects, each having: name, type, budget (in BDT), google_maps_link (MUST be a direct, working URL)).
-    7. "itinerary" (object where keys are "day_1", "day_2", etc. Each day must have 'morning', 'afternoon', 'evening' time slots).
-    
-    Each time slot inside the "itinerary" must be an object containing:
-    A. "activity" (string, the main place or event).
-    B. "google_maps_link" (string, **MUST be a valid and direct Google Maps URL, NOT a placeholder**. The format **must** look like **"https://www.google.com/maps..."** or **".../1..."**. **STRICTLY AVOID** any links ending with \`/0\` or that are non-functional.).
-    C. "entry_fee" (string, e.g., "500 BDT" or "Free").
-    D. "timing" (string, e.g., "9:00 AM - 5:00 PM").
-    E. "transport" (object with: "type" (e.g., Bus, Taxi), "name" (e.g., Bus 300), "pickup_point" (string, e.g., "Dhaka Gabtoli Bus Terminal"), and "cost" (string, in BDT)).
-    
+    5. "best_time_to_visit" (string, the best season/month to visit this city).
+    6. "safety_health_tips" (array of 3-5 strings with specific advice, e.g., "Bring mosquito repellent due to dengue season").
+    7. "packing_list" (array of 5-7 string items based on destination/weather).
+    8. "top_attractions_suggestions" (array of 3-5 objects for places, each having: name, description, google_maps_link (MUST be a direct, working URL)).
+    9. "photo_spots" (array of 3 objects, each having: name, description, google_maps_link (MUST be a direct, working URL)).
+    10. "conceptual_transport_plan" (object with 'route' (string) and 'cost_estimate' (string in BDT) for ${from} to ${to}).
+    11. "hotel_suggestions" (array of 3 objects, each having: name, location, rating, price_range (in BDT), booking_link (MUST be a direct, working URL)).
+    12. "itinerary" (object where keys are "day_1", "day_2", etc. Each day must have 'morning', 'afternoon', 'evening' time slots as before).
+
     Start your response directly with the opening curly brace '{' of the JSON object.`;
 
 
@@ -354,17 +613,20 @@ async function generateTrip(){
 
         let trip;
         try{ 
-            // Attempt to parse the pure JSON output
-            trip = JSON.parse(text); 
-        } 
+            // Ensures the text is cleaned of markdown backticks
+            const cleanedText = text.replace(/```json|```/g, '').trim();
+            trip = JSON.parse(cleanedText); 
+        } 
         catch(e){ 
-            console.error("JSON Parse Error:", e, "\nRaw Text:", text);
-            output.innerHTML=`<div class="card"><p style="color:red">JSON Parse Error. The AI might have included extra text. Please try again or check console for raw output.</p></div>`;
+            // Robust JSON Parse Error Handling
+            output.innerHTML=`<div class="card"><p style="color:red">JSON Parse Error. AI output was likely not pure JSON. Please try again.</p><p style="font-size: 0.8rem; color: #555; word-break: break-all;">Raw AI Start (to debug): ${text.substring(0, 300)}...</p></div>`;
             loading.style.display='none';
             return; 
         }
         
-        displayTrip(trip); 
+        currentTripData = trip; // Store globally for tools
+        displayTrip(trip, allWeatherData); // Pass all weather data
+        readSummary(trip.trip_name, trip.duration, trip.estimated_total_cost?.summary); // Voice Summary
 
     } catch(err){ 
         output.innerHTML=`<div class="card"><p style="color:red">Connection Error: ${err.message}</p></div>`; 
@@ -373,188 +635,517 @@ async function generateTrip(){
 }
 
 /* ---------------------------------
-   2. DISPLAY FUNCTION (STEP-BY-STEP OUTPUT)
-   --------------------------------- */
-function displayTrip(parsedTripData) {
-    // Add ID for PDF export
+    3. VOICE SUMMARY FUNCTION (🔊)
+    --------------------------------- */
+function readSummary(name, duration, cost) {
+    if ('speechSynthesis' in window) {
+        const summaryText = `Your trip, titled ${name}, is for a duration of ${duration}. The estimated total cost is ${cost}. Check the itinerary for details.`;
+        const utterance = new SpeechSynthesisUtterance(summaryText);
+        utterance.lang = 'en-US'; 
+        speechSynthesis.speak(utterance);
+    }
+}
+
+/* ---------------------------------
+ 4. CALENDAR EXPORT URL GENERATOR (📅) - FIXED 
+    --------------------------------- */
+
+   function formatDateForCalendar(dateStr) {
+    if (!dateStr) return "";
+    return dateStr.replace(/-/g, "");
+}
+function addOneDay(dateStr) {
+    let d = new Date(dateStr);
+    d.setDate(d.getDate() + 1);
+    let y = d.getFullYear();
+    let m = String(d.getMonth() + 1).padStart(2, "0");
+    let day = String(d.getDate()).padStart(2, "0");
+    return `${y}${m}${day}`;
+}
+
+function exportTripToCalendar() {
+    let from = document.getElementById("from").value.trim();
+    let to = document.getElementById("to").value.trim();
+    let startDate = document.getElementById("startDate").value;
+    let endDate = document.getElementById("endDate").value;
+
+    if (!from || !to || !startDate || !endDate) {
+        alert("Please fill all fields!");
+        return;
+    }
+
+    let startCal = formatDateForCalendar(startDate);
+    let endCal = formatDateForCalendar(addOneDay(endDate)); 
+
+    let title = `Trip: ${from} → ${to}`;
+    let details = `Travel plan from ${from} to ${to}.\nStart: ${startDate}\nEnd: ${endDate}`;
+
+    let gcalUrl =
+        `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+        `&text=${encodeURIComponent(title)}` +
+        `&details=${encodeURIComponent(details)}` +
+        `&dates=${startCal}/${endCal}`;
+
+    window.open(gcalUrl, "_blank");
+}
+
+
+
+
+/* ---------------------------------
+    5. EXPENSE TRACKER FUNCTIONS (🧾)
+    --------------------------------- */
+let expenses = [];
+function saveExpenses() {
+    localStorage.setItem('tripExpenses', JSON.stringify(expenses));
+}
+function loadExpenses() {
+    const saved = localStorage.getItem('tripExpenses');
+    expenses = saved ? JSON.parse(saved) : [];
+    renderExpenses();
+}
+function addExpense() {
+    const desc = document.getElementById('expenseDescription').value.trim();
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+
+    if (desc && !isNaN(amount) && amount > 0) {
+        expenses.push({ description: desc, amount: amount, date: new Date().toLocaleDateString() });
+        saveExpenses();
+        renderExpenses();
+        document.getElementById('expenseDescription').value = '';
+        document.getElementById('expenseAmount').value = '';
+    } else {
+        alert("Please enter a valid description and amount.");
+    }
+}
+function renderExpenses() {
+    const list = document.getElementById('expenseList');
+    const totalDisplay = document.getElementById('totalExpense');
+    list.innerHTML = '';
+    let total = 0;
+
+    expenses.forEach((e, index) => {
+        const item = document.createElement('p');
+        item.style.margin = '5px 0';
+        item.innerHTML = `(${e.date}) ${e.description}: <strong>${e.amount.toLocaleString()} BDT</strong> 
+                              <button onclick="removeExpense(${index})" style="background: #f44336; padding: 2px 5px; margin-left: 10px; flex:none; width:auto;"><i class="fas fa-trash-alt"></i></button>`;
+        list.appendChild(item);
+        total += e.amount;
+    });
+
+    totalDisplay.textContent = `Total Spent: ${total.toLocaleString()} BDT`;
+}
+function removeExpense(index) {
+    expenses.splice(index, 1);
+    saveExpenses();
+    renderExpenses();
+}
+
+/* ---------------------------------
+    6. SHARE TRIP PLAN FUNCTION (📱)
+    --------------------------------- */
+function sharePlan() {
+    if (!currentTripData) {
+        alert("Please generate a trip plan first!");
+        return;
+    }
+    const destination = document.getElementById('to').value;
+    const dates = `${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`;
+    const costSummary = currentTripData.estimated_total_cost?.summary || 'N/A';
+    
+    const shareText = `🌍 New AI Trip: ${currentTripData.trip_name}!
+*Destination:* ${destination}
+*Dates:* ${dates}
+*Budget:* ${costSummary}
+
+Check the full plan details below:
+(Copy and Paste the URL if sharing on desktop)`;
+
+    if (navigator.share) {
+        navigator.share({
+            title: currentTripData.trip_name,
+            text: shareText,
+            url: window.location.href,
+        }).catch(error => console.log('Error sharing', error));
+    } else {
+        const whatsappURL = `https://wa.me/?text=${encodeURIComponent(shareText + "\n\nFull Plan Link: " + window.location.href)}`;
+        window.open(whatsappURL, '_blank');
+    }
+}
+
+/* ---------------------------------
+    7. CURRENCY CONVERTER (💰)
+    --------------------------------- */
+// Approximate rates BDT to 1 unit of target currency (based on October 2025 search data)
+const EXCHANGE_RATES = {
+    "USD": { rate: 0.0085, symbol: '$' }, 
+    "EUR": { rate: 0.0078, symbol: '€' },
+    "INR": { rate: 0.71, symbol: '₹' },
+    "THB": { rate: 0.26, symbol: '฿' }, // Thai Baht
+    "MYR": { rate: 0.034, symbol: 'RM' } // Malaysian Ringgit
+};
+
+function convertCurrency() {
+    const amountBDT = parseFloat(document.getElementById('bdtAmount').value);
+    const targetCurrency = document.getElementById('targetCurrency').value;
+    const resultDisplay = document.getElementById('conversionResult');
+
+    if (isNaN(amountBDT) || amountBDT <= 0) {
+        resultDisplay.textContent = "Please enter a valid BDT amount.";
+        return;
+    }
+    if (!EXCHANGE_RATES[targetCurrency]) {
+        resultDisplay.textContent = "Selected currency not supported.";
+        return;
+    }
+
+    const { rate, symbol } = EXCHANGE_RATES[targetCurrency];
+    const convertedAmount = (amountBDT * rate).toFixed(2);
+
+    resultDisplay.innerHTML = `
+        <p><strong>${amountBDT.toLocaleString()} BDT</strong> is approximately:</p>
+        <p style="margin:5px 0; font-size:1.1rem;"><strong>${targetCurrency}:</strong> ${convertedAmount} ${symbol}</p>
+        <p style="font-size:0.8rem; color:#777;">*Rates are approximate and subject to change.</p>
+    `;
+}
+
+/* ---------------------------------
+    8. DISPLAY FUNCTION (FIXED: [object Object] & Map Link)
+    --------------------------------- */
+function displayTrip(parsedTripData, allWeatherData) {
     output.innerHTML = '<div class="output-section" id="itineraryContent"></div>'; 
     const outputSection = output.querySelector('.output-section');
+    
+    // Check for any successful weather data
+    const successfulWeather = allWeatherData.filter(data => !data.error && data.condition);
+    // Get the first error message if any
+    const firstWeatherError = allWeatherData.find(data => data.error)?.error;
 
-    // --- STEP 1: SUMMARY CARD ---
+    // Daily Weather Card 
+    const weatherCard = document.createElement('div');
+    weatherCard.className = 'card weather-card';
+    weatherCard.innerHTML = `
+        <h2><i class="fas fa-cloud-sun-rain"></i> Daily Weather Forecast for ${document.getElementById('to').value}</h2>
+        <p style="margin-top: -10px; margin-bottom: 20px;">AI General Forecast: ${parsedTripData.weather_forecast || 'N/A'}</p>
+        <div id="dailyWeatherList">
+            ${successfulWeather.length > 0 ? 
+                successfulWeather.map(data => `
+                    <div class="daily-weather-item">
+                        <img src="${data.icon}" alt="${data.condition}" style="width:40px; height:40px;">
+                        <div>
+                            <p style="margin:0; font-weight: bold;">${new Date(data.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                            <p style="margin:0; font-size: 0.9rem; color:#555;">${data.condition}</p>
+                        </div>
+                        <p style="margin:0 0 0 auto; font-size: 1.1rem; color:#d32f2f;">Max: ${data.maxTemp}</p>
+                        <p style="margin:0; font-size: 1.1rem; color:#1976d2;">Min: ${data.minTemp}</p>
+                    </div>
+                `).join('') 
+                : `<p style="color:red; margin-top:1rem; font-weight: bold;">⚠️ Weather Data Error:</p>
+                   <p style="color:red; margin-left: 20px; word-break: break-all;">${firstWeatherError || 'Could not fetch data. Check your WeatherAPI key or ensure the destination city name is correct (e.g., "Dhaka" or "Cox\'s Bazar").'}</p>
+                   <p style="font-size: 0.8rem; color:#777; margin-top: 10px;">**গুরুত্বপূর্ণ:** আপনার WeatherAPI key (\`${document.getElementById('weatherApiKey').value.trim()}\`) চালু আছে কিনা বা আপনি গন্তব্যের নাম (যেমন: **Dhaka** বা **Cox's Bazar**) সঠিকভাবে ইংরেজিতে লিখেছেন কিনা, তা পরীক্ষা করুন।</p>`
+            }
+        </div>
+        <p style="margin-top:1rem; font-size:0.9rem; color:#777;">*The forecast is provided by WeatherAPI.com.</p>
+    `;
+    outputSection.appendChild(weatherCard);
+    
+    // Summary Card (SYNTAX CORRECTED: Using '||' for safe property access)
     const summaryCard = document.createElement('div');
     summaryCard.className = 'card';
     summaryCard.innerHTML = `
         <h2><i class="fas fa-clipboard-list"></i> Trip Overview: ${parsedTripData.trip_name || 'AI Generated Trip'}</h2>
         <p style="text-align:left; margin-bottom: 0.5rem;"><strong>Destination:</strong> ${document.getElementById('to').value || 'N/A'}</p>
+        <p style="text-align:left; margin-bottom: 0.5rem;"><strong>Dates:</strong> ${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}</p>
         <p style="text-align:left; margin-bottom: 0.5rem;"><strong>Duration:</strong> ${parsedTripData.duration || 'N/A'}</p>
-        <p style="text-align:left; margin-bottom: 0.5rem;"><strong><i class="fas fa-sun"></i> Weather Forecast:</strong> ${parsedTripData.weather_forecast || 'N/A'}</p>
     `;
     outputSection.appendChild(summaryCard);
 
-    // --- STEP 2: COST BREAKDOWN ---
-    const costCard = document.createElement('div');
-    costCard.className = 'card cost-breakdown';
-    costCard.innerHTML = `
+    // Cost Breakdown & Transport Planner Card 
+    const costTransportCard = document.createElement('div');
+    costTransportCard.className = 'card';
+    
+    // FIX 1: Handle potential [object Object] error in cost_estimate
+    let conceptualCost = parsedTripData.conceptual_transport_plan?.cost_estimate || 'N/A';
+    if (typeof conceptualCost === 'object' && conceptualCost !== null) {
+        // Attempt to stringify and clean the object if it's not a string
+        conceptualCost = JSON.stringify(conceptualCost).replace(/[{}"\\]/g, ' ').trim() || 'N/A';
+    }
+    
+    costTransportCard.innerHTML = `
         <h3><i class="fas fa-hand-holding-usd"></i> Estimated Total Cost ৳</h3>
         <p style="text-align:left; font-weight:600;">Summary: ${parsedTripData.estimated_total_cost?.summary || 'N/A'}</p>
-        <ul style="text-align:left;">
-            ${Object.entries(parsedTripData.estimated_total_cost?.details || {}).map(([k,v]) => `<li><strong>${k}:</strong> ${v}</li>`).join('')}
+        <ul style="text-align:left; list-style-type: none; padding-left:0;">
+            ${Object.entries(parsedTripData.estimated_total_cost?.details || {}).map(([k,v]) => `<li style="border-left: 3px solid #00bfa5; padding-left: 10px; margin-bottom: 5px;"><strong>${k}:</strong> ${v}</li>`).join('')}
+        </ul>
+
+        <h3 style="margin-top: 2rem;"><i class="fas fa-plane"></i> Transport Planner (Conceptual)</h3>
+        <div class="transport-info" style="background-color: #e3f2fd; border-color: #2196f3;">
+            <p><strong>Route Options:</strong> ${parsedTripData.conceptual_transport_plan?.route || 'N/A'}</p>
+            <p><strong>Estimated Cost (Return, ${document.getElementById('travelers').value} travelers):</strong> ${conceptualCost}</p>
+            <p style="font-size: 0.8rem; color: #555;">*This is an AI-generated conceptual route and cost. Consult carrier websites for live data.</p>
+        </div>
+    `;
+    outputSection.appendChild(costTransportCard);
+
+    // Itinerary Card
+const itineraryCard = document.createElement('div');
+itineraryCard.className = 'card';
+itineraryCard.innerHTML = `<h2><i class="fas fa-map-marked-alt"></i> Detailed Itinerary</h2>`;
+
+Object.keys(parsedTripData.itinerary).forEach(dayKey => {
+    const day = parsedTripData.itinerary[dayKey];
+    const dayContent = document.createElement('div');
+    dayContent.className = 'itinerary-day';
+    dayContent.innerHTML = `<h3 style="margin-top:0;"><i class="fas fa-calendar-day"></i> ${dayKey.replace('_',' ').toUpperCase()}</h3>`;
+
+    ['morning', 'afternoon', 'evening'].forEach(time => {
+        if (day[time]) {
+            const slot = day[time];
+            const transport = slot.transport || {};
+
+            // Fallback/default values
+            const activity = slot.activity || 'Activity TBD (Error - AI did not fill)';
+            const entryFee = slot.entry_fee || '0 BDT (Estimated)';
+            const timing = slot.timing || 'Check locally';
+            const transportType = transport.type || 'Local Taxi/CNG';
+            const transportName = transport.name || 'Local Service';
+            const transportPickup = transport.pickup_point || 'Hotel/Accommodation';
+            const transportCost = transport.cost || '100 - 300 BDT (Estimated)';
+            const mapLink = slot.google_maps_link;
+
+            // ✅ FIX: Always generate a valid Google Maps link
+            let finalMapLink = '';
+            if (mapLink && mapLink.includes('http') && !mapLink.includes('googleusercontent')) {
+                finalMapLink = mapLink;
+            } else {
+                // Automatically create Google Maps link from activity name
+                const encoded = encodeURIComponent(activity);
+                finalMapLink = `https://www.google.com/maps/search/?api=1&query=${encoded}`;
+            }
+
+            dayContent.innerHTML += `
+                <div class="time-slot">
+                    <p><strong><i class="fas fa-clock"></i> ${time.charAt(0).toUpperCase() + time.slice(1)}:</strong></p>
+                    <p style="margin-top:0;">
+                        <strong><i class="fas fa-walking"></i> Activity:</strong> ${activity}<br>
+                        <strong>Details:</strong> Fee: ${entryFee} | Timing: ${timing}<br>
+                        <a href="${finalMapLink}" target="_blank">View on Google Maps 🗺️</a>
+                    </p>
+                    <div class="transport-info">
+                        <strong><i class="fas fa-bus"></i> Transport:</strong> ${transportType} (${transportName})<br>
+                        <strong>Pickup:</strong> ${transportPickup} |
+                        <strong>Cost:</strong> ${transportCost}
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    itineraryCard.appendChild(dayContent);
+});
+
+outputSection.appendChild(itineraryCard);
+
+    
+    // New AI Recommendations Card 
+    const newRecsCard = document.createElement('div');
+    newRecsCard.className = 'card suggestion-list';
+    newRecsCard.innerHTML = `<h2><i class="fas fa-magic"></i> AI Recommendations</h2>`;
+
+    newRecsCard.innerHTML += `
+        <h3 style="color:#f57c00;"><i class="fas fa-clock"></i> Best Travel Time Advisor</h3>
+        <p>${parsedTripData.best_time_to_visit || 'N/A'}</p>
+        <h3 style="margin-top: 2rem;"><i class="fas fa-shield-alt"></i> Safety & Health Tips</h3>
+        <ul style="list-style-type: disc; padding-left: 20px;">
+            ${parsedTripData.safety_health_tips?.map(tip => `<li>${tip}</li>`).join('') || "<li>No specific tips provided.</li>"}
+        </ul>
+        <h3 style="margin-top: 2rem;"><i class="fas fa-suitcase-rolling"></i> Packing List Generator</h3>
+        <ul class="packing-list" style="list-style-type: disc; padding-left: 20px;">
+            ${parsedTripData.packing_list?.map(item => `<li>${item}</li>`).join('') || "<li>No specific items suggested.</li>"}
         </ul>
     `;
-    outputSection.appendChild(costCard);
 
-    // --- STEP 3: DAY-WISE ITINERARY ---
-    const itineraryCard = document.createElement('div');
-    itineraryCard.className = 'card';
-    itineraryCard.innerHTML = `<h2><i class="fas fa-map-marked-alt"></i> Detailed Itinerary</h2>`;
+    if(parsedTripData.top_attractions_suggestions && parsedTripData.top_attractions_suggestions.length > 0){
+        newRecsCard.innerHTML += `<h3 style="margin-top: 2rem;"><i class="fas fa-binoculars"></i> AI Place Recommender (Top Attractions)</h3><ul>` +
+            parsedTripData.top_attractions_suggestions.map(a => `
+                <li style="text-align:left;">
+                    <strong>${a.name || 'N/A'}</strong>: ${a.description || 'N/A'}<br>
+                    <a href="${a.google_maps_link || '#'}" target="_blank">Map 🗺️</a>
+                </li>`).join('') + `</ul>`;
+    }
 
-    Object.keys(parsedTripData.itinerary).forEach(dayKey => {
-        const day = parsedTripData.itinerary[dayKey];
-        const dayContent = document.createElement('div');
-        dayContent.className = 'itinerary-day';
-        dayContent.innerHTML = `<h3 style="margin-top:0;"><i class="fas fa-calendar-day"></i> ${dayKey.replace('_',' ').toUpperCase()}</h3>`;
-
-        ['morning','afternoon','evening'].forEach(time => {
-            if(day[time]){
-                const slot = day[time];
-                const transport = slot.transport || {};
-                
-                dayContent.innerHTML += `
-                    <div class="time-slot">
-                        <p><strong><i class="fas fa-clock"></i> ${time.charAt(0).toUpperCase() + time.slice(1)}:</strong></p>
-                        <p style="margin-top:0;">
-                            <strong><i class="fas fa-walking"></i> Activity:</strong> ${slot.activity || 'N/A'}<br>
-                            <strong>Details:</strong> Fee: ${slot.entry_fee || 'N/A'} | Timing: ${slot.timing || 'N/A'}<br>
-                            
-                            ${slot.meal ? `<strong><i class="fas fa-utensils"></i> Meal:</strong> ${slot.meal}<br>` : ''}
-                            
-                            ${slot.google_maps_link ? `<span class="map-link-text hide-in-pdf">Map Link (Copy/Paste for PDF): ${slot.google_maps_link}</span><br>` : ''}
-                            ${slot.google_maps_link ? `<a href="${slot.google_maps_link}" target="_blank">View on Google Maps 🗺️</a>` : ''}
-                        </p>
-                        <div class="transport-info">
-                            <strong><i class="fas fa-bus"></i> Transport:</strong> ${transport.type || 'N/A'} (${transport.name || 'Generic'})<br>
-                            <strong>Pickup Point:</strong> ${transport.pickup_point || 'N/A'} | 
-                            <strong>Cost:</strong> ${transport.cost || 'N/A'}
-                        </div>
-                    </div>
-                `;
-            }
+    if(parsedTripData.photo_spots && parsedTripData.photo_spots.length > 0){
+        newRecsCard.innerHTML += `<h3 style="margin-top: 2rem;"><i class="fas fa-camera-retro"></i> AI Photo Spot Finder</h3>`;
+        parsedTripData.photo_spots.forEach(spot => {
+            newRecsCard.innerHTML += `
+                <div class="photo-spot-item">
+                    <strong>${spot.name || 'N/A'}</strong>: ${spot.description || 'N/A'}<br>
+                    <a href="${spot.google_maps_link || '#'}" target="_blank">View Location 📸</a>
+                </div>`;
         });
-        itineraryCard.appendChild(dayContent);
-    });
-    outputSection.appendChild(itineraryCard);
-    
-    // --- STEP 4: SUGGESTIONS ---
-    const suggestionsCard = document.createElement('div');
-    suggestionsCard.className = 'card suggestion-list';
-    suggestionsCard.innerHTML = `<h2><i class="fas fa-lightbulb"></i> Recommendations</h2>`;
+    }
 
-    // Hotels
     if(parsedTripData.hotel_suggestions && parsedTripData.hotel_suggestions.length > 0){
-        suggestionsCard.innerHTML += `<h3>🏨 Hotel Recommendations</h3><ul>` +
+        newRecsCard.innerHTML += `<h3 style="margin-top: 2rem;">🏨 Hotel Availability (AI Concept)</h3><ul>` +
             parsedTripData.hotel_suggestions.map(h => {
                 return `<li style="text-align:left;">
                     <strong>${h.name || 'N/A'}</strong> (${h.location || 'N/A'})<br>
-                    <strong><i class="fas fa-star"></i> Rating:</strong> ${h.rating || 'N/A'} | <strong><i class="fas fa-tags"></i> Price:</strong> ${h.price_range || 'N/A'}<br>
-                    <span class="booking-link-text hide-in-pdf">Booking Link (Copy/Paste for PDF): ${h.booking_link || 'N/A'}</span><br>
-                    <p style="margin-bottom:15px"><a href="${h.booking_link || '#'}" target="_blank">Check Booking Link 🔗</a>></p>
+                    <strong><i class="fas fa-star"></i> Rating:</strong> ${h.rating || 'N/A'} | <strong>Price:</strong> ${h.price_range || 'N/A'}<br>
+                    <a href="${h.booking_link || '#'}" target="_blank">Check Booking Link 🔗</a>
                 </li>`;
             }).join('') + `</ul>`;
     }
+    outputSection.appendChild(newRecsCard);
 
-    // Meals
-    if(parsedTripData.meal_suggestions && parsedTripData.meal_suggestions.length > 0){
-        suggestionsCard.innerHTML += `<h3>🍽️ Restaurant Suggestions</h3><ul>` +
-            parsedTripData.meal_suggestions.map(m=>{
-                return `<li style="text-align:left;">
-                    <strong>${m.name || 'N/A'}</strong> (${m.type || 'N/A'})<br>
-                    <strong>Budget:</strong> ${m.budget || 'N/A'} | 
-                    <span class="map-link-text hide-in-pdf">Map Link (Copy/Paste for PDF): ${m.google_maps_link || 'N/A'}</span><br>
-                    <a href="${m.google_maps_link || '#'}" target="_blank">Map 🗺️</a>
-                </li>`;
-            }).join('') + `</ul>`;
-    }
-    outputSection.appendChild(suggestionsCard);
+    // Tools Card (Export, Currency, Expense)
+    const toolsCard = document.createElement('div');
+    toolsCard.className = 'card tools-card';
+    toolsCard.innerHTML = `<h2><i class="fas fa-tools"></i> Tools & Export</h2>`;
 
-    // // --- STEP 5: PDF DOWNLOAD AND EXTRA TOOLS ---
-    // const extraCard = document.createElement('div');
-    // extraCard.className = 'card';
-    // extraCard.innerHTML = `
-    //     <h2><i class="fas fa-tools"></i> Tools & Export</h2>
-        
-    //     <h3>🌱 Sustainability Tips</h3>
-    //     <ul style="list-style-type: disc; padding-left: 20px;">
-    //         ${parsedTripData.sustainability_tips?.map(t=>`<li>${t}</li>`).join('') || '<li>No specific tips provided.</li>'}
-    //     </ul>
-        
-    //     <h3 style="margin-top: 1.5rem;">⬇️ Export & Map</h3>
-    //     <div class="form-group" style="margin-top: 15px;">
-    //         <button id="pdfDownloadBtn" onclick="downloadPDF('Trip Plan')"><i class="fas fa-file-pdf"></i> Download Plan as PDF</button>
-    //         <button onclick="alert('Interactive Map View requires an external mapping API.')" style="flex:auto; background: #607d8b; margin-top: 0;"><i class="fas fa-map"></i> Interactive Map View</button>
-    //     </div>
-    // `;
-    //outputSection.appendChild(extraCard);
+    // Calendar & Share Buttons
+    toolsCard.innerHTML += `
+        <h3 style="margin-top: 1.5rem;">⬇️ Export & Share</h3>
+        <div class="form-group" style="margin-top: 15px;">
+            <button id="pdfDownloadBtn" onclick="downloadPDF()" style="flex:auto; background: #b71c1c; margin-right: 10px;"><i class="fas fa-file-pdf"></i> Download PDF</button>
+            <button onclick="exportTripToCalendar()" style="flex:auto; background: #0f9d58; margin-right: 10px;"><i class="fas fa-calendar-alt"></i> Calendar Export</button>
+            <button onclick="sharePlan()" style="flex:auto; background: #25d366;"><i class="fab fa-whatsapp"></i> Share Trip Plan</button>
+        </div>
+    `;
+
+    // Currency Converter
+    toolsCard.innerHTML += `
+        <h3 style="margin-top: 2rem;"><i class="fas fa-money-bill-transfer"></i> Dynamic Currency Converter (BDT → Selected)</h3>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <input type="number" id="bdtAmount" placeholder="Amount in BDT" style="width: 30%; padding: 10px;">
+            
+            <div class="icon-input" style="width: 30%;">
+                <i class="fas fa-exchange-alt" style="left: 8px;"></i>
+                <select id="targetCurrency" style="width: 100%; padding-left: 35px;">
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="INR">INR - Indian Rupee</option>
+                    <option value="THB">THB - Thai Baht</option>
+                    <option value="MYR">MYR - Malaysian Ringgit</option>
+                </select>
+            </div>
+            
+            <button onclick="convertCurrency()" style="background: #3f51b5; flex:none; width:auto; padding: 10px 20px; margin:0;"><i class="fas fa-calculator"></i> Convert</button>
+        </div>
+        <div id="conversionResult" style="margin-top: 10px; padding: 10px; border: 1px dashed #607d8b; border-radius: 5px;">
+            Enter an amount to see conversion.
+        </div>
+    `;
+
+    // Expense Tracker
+    toolsCard.innerHTML += `
+        <h3 style="margin-top: 2rem;"><i class="fas fa-receipt"></i> Expense Tracker</h3>
+        <div id="expenseTracker">
+            <div class="expense-entry">
+                <input type="text" id="expenseDescription" placeholder="Description (e.g., Dinner)" style="width: 50%;">
+                <input type="number" id="expenseAmount" placeholder="Amount (BDT)" style="width: 30%;">
+                <button onclick="addExpense()" style="flex:none; width:auto; padding: 5px 10px; margin:0; background: #00897b;"><i class="fas fa-plus-circle"></i> Add</button>
+            </div>
+            <div id="expenseList" style="max-height: 150px; overflow-y: auto;"></div>
+            <div id="totalExpense">Total Spent: 0 BDT</div>
+            <p style="font-size: 0.8rem; margin-top: 10px; color:#555;">(Data is saved in your browser's local storage)</p>
+        </div>
+    `;
+    outputSection.appendChild(toolsCard);
+
+    loadExpenses();
+    
+    // Offline Map Suggestion
+    outputSection.innerHTML += `
+        <div class="card" style="border-left: 6px solid #4caf50;">
+            <h2><i class="fas fa-globe-asia"></i> Offline Map Download Suggestion</h2>
+            <p>We recommend saving the main attractions in your destination (<strong>${document.getElementById('to').value}</strong>) on Google Maps offline. This allows for navigation even without internet access.</p>
+        </div>
+    `;
 }
-
-generateBtn.addEventListener('click',generateTrip);
-
 
 /* ---------------------------------
-   3. PDF DOWNLOAD FUNCTION (using html2pdf.js)
-   --------------------------------- */
+    9. PDF DOWNLOAD FUNCTION
+    --------------------------------- */
+
 function downloadPDF() {
-    const content = document.getElementById('itineraryContent');
-    if (!content) {
-        alert("No itinerary generated yet!");
-        return;
-    }
+      const element = document.getElementById('itineraryContent');
+const { jsPDF } = window.jspdf;
 
-    // 1. Create a deep clone to manipulate content for PDF without changing the display
-    const tempElement = content.cloneNode(true);
-    
-    // 2. Adjust styling within the clone for better PDF appearance (e.g., remove live links and buttons)
-    
-    // Remove the interactive buttons
-    tempElement.querySelectorAll('.form-group button, #pdfDownloadBtn').forEach(el => el.style.display = 'none');
-    
-    // Hide the live links and ONLY show the plain text links (which were previously marked with hide-in-pdf class)
-    tempElement.querySelectorAll('a[target="_blank"]').forEach(el => el.remove());
-    tempElement.querySelectorAll('.hide-in-pdf').forEach(el => el.style.display = 'block');
-    
-    // Simplify the look of itinerary sections for printing
-    tempElement.querySelectorAll('.itinerary-day, .transport-info').forEach(el => {
-        el.style.pageBreakInside = 'avoid'; // Prevent element from splitting across pages
-        el.style.padding = '10px';
-        el.style.margin = '10px 0';
-        if (el.classList.contains('transport-info')) {
-            el.style.backgroundColor = '#f8f8f8'; // Light background for visibility
-            el.style.border = '1px solid #ccc';
+    html2canvas(element, { scale: 2 }).then((canvas) => {
+        const imgData = canvas.toDataURL("image/png");
+
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
         }
+var filename = `${document.getElementById('to').value}_Trip_Plan.pdf`
+        pdf.save(filename);
+
+
     });
-    tempElement.querySelectorAll('.card').forEach(el => el.style.pageBreakInside = 'avoid');
+};
+generateBtn.addEventListener("click",generateTrip);
 
-    // 3. Configuration for html2pdf
-    const options = {
-        margin: 10,
-        filename: `Travel_Plan.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2,           // High scale for better image quality 
-            useCORS: true,      // Handle external resources better
-            logging: false 
-        }, 
-        jsPDF: { 
-            unit: 'mm', 
-            format: 'a4', 
-            orientation: 'portrait' 
+/* ---------------------------------
+    10. AUTO DAY CALCULATION IMPLEMENTATION
+    --------------------------------- */
+function calculateDays() {
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+
+    if (start && end) {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        
+        // Ensure end date is not before start date
+        if (endDate < startDate) {
+             document.getElementById('days').value = "";
+             return;
         }
-    };
 
-    // 4. Generate PDF using html2pdf
-    html2pdf().set(options).from(tempElement).save();
+        // Calculate difference in milliseconds
+        const timeDiff = endDate.getTime() - startDate.getTime();
+
+        // Convert to days (add 1 to include both start and end day)
+        const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+        document.getElementById('days').value = dayDiff;
+    } else {
+        document.getElementById('days').value = "";
+    }
 }
+
+// Initialize date fields and add event listeners
+document.addEventListener("DOMContentLoaded", () => {
+    const today = new Date();
+    const futureDate = new Date(today);
+    futureDate.setDate(futureDate.getDate() + 2); // Default to a 3-day trip
+
+    const formatDate = (date) => date.toISOString().split("T")[0];
+
+    // Set default dates and calculate days
+    document.getElementById('startDate').value = formatDate(today);
+    document.getElementById('endDate').value = formatDate(futureDate);
+    calculateDays(); // Initial calculation
+
+    // Add event listeners for dynamic calculation
+    document.getElementById('startDate').addEventListener("change", calculateDays);
+    document.getElementById('endDate').addEventListener("change", calculateDays);
+});
 </script>
 </body>
 </html>
-
-
