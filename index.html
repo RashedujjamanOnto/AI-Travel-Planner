@@ -842,7 +842,7 @@ function displayTrip(parsedTripData, allWeatherData) {
                 `).join('') 
                 : `<p style="color:red; margin-top:1rem; font-weight: bold;">⚠️ Weather Data Error:</p>
                    <p style="color:red; margin-left: 20px; word-break: break-all;">${firstWeatherError || 'Could not fetch data. Check your WeatherAPI key or ensure the destination city name is correct (e.g., "Dhaka" or "Cox\'s Bazar").'}</p>
-                   <p style="font-size: 0.8rem; color:#777; margin-top: 10px;">**গুরুত্বপূর্ণ:** আপনার WeatherAPI key (\`${document.getElementById('weatherApiKey').value.trim()}\`) চালু আছে কিনা বা আপনি গন্তব্যের নাম (যেমন: **Dhaka** বা **Cox's Bazar**) সঠিকভাবে ইংরেজিতে লিখেছেন কিনা, তা পরীক্ষা করুন।</p>`
+                   `
             }
         </div>
         <p style="margin-top:1rem; font-size:0.9rem; color:#777;">*The forecast is provided by WeatherAPI.com.</p>
@@ -1150,5 +1150,6 @@ document.addEventListener("DOMContentLoaded", () => {
 </body>
 
 </html>
+
 
 
