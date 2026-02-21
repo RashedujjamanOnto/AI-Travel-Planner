@@ -319,22 +319,22 @@ button{
 <h1><i class="fas fa-route"></i> AI Travel Planner 🌍</h1>
 <p style="text-align: center;margin-bottom: 30px;">Plan your perfect trip with advanced AI features.</p>
 
-<div class="form-group" style="display:none">
+<!-- <div class="form-group" style="display:none">
     <div class="form-field full-width">
         <label for="apiKey"><i class="fas fa-key"></i> Google Gen AI API Key</label>
         <div class="icon-input">
             <i class="fas fa-lock"></i>
-            <input type="password" id="apiKey" value="AIzaSyDa9VgM4O-UzAweG7fv6whkCPGzGlMf8jA" placeholder="Enter your AIzaSy... key">
+            <input type="password" id="apiKey"  placeholder="Enter your AIzaSy... key">
         </div>
     </div>
     <div class="form-field full-width">
         <label for="weatherApiKey"><i class="fas fa-cloud"></i> WeatherAPI.com Key</label>
         <div class="icon-input">
             <i class="fas fa-key"></i>
-            <input type="password" id="weatherApiKey" value="625bd1dc984f43199ff63536252510" placeholder="Enter your WeatherAPI key">
+            <input type="password" id="weatherApiKey"  placeholder="Enter your WeatherAPI key">
         </div>
     </div>
-</div>
+</div> -->
 
 <div class="form-group">
     <div class="form-field">
@@ -439,7 +439,7 @@ button{
 <div id="output"></div>
 </div>
 
-
+<script src="config.js"></script>
 <script>
 const generateBtn=document.getElementById('generateBtn');
 const output=document.getElementById('output');
@@ -514,8 +514,9 @@ async function fetchWeatherData(apiKey, location, date) {
     2. AI GENERATOR FUNCTION (UPDATED PROMPT)
     --------------------------------- */
 async function generateTrip(){
-    const key=document.getElementById('apiKey').value.trim();
-    const weatherApiKey=document.getElementById('weatherApiKey').value.trim();
+
+    const key= CONFIG.GEMINI_API_KEY;
+    const weatherApiKey=CONFIG.WEATHER_API_KEY;
     const from=document.getElementById('from').value.trim();
     const to=document.getElementById('to').value.trim();
     const startDate=document.getElementById('startDate').value;
