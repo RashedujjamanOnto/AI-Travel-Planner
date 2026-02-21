@@ -439,7 +439,7 @@ button{
 <div id="output"></div>
 </div>
 
-<script src="config.js"></script>
+
 <script>
 const generateBtn=document.getElementById('generateBtn');
 const output=document.getElementById('output');
@@ -513,10 +513,16 @@ async function fetchWeatherData(apiKey, location, date) {
 /* ---------------------------------
     2. AI GENERATOR FUNCTION (UPDATED PROMPT)
     --------------------------------- */
+const encodedGeminiKey = "QUl6YVN5QkdCV2JwN1I4Z0tYVDN5bGFxVmlvVmVBTVJpTXlpNUpN"; 
+const encodedWeatherKey = "NjI1YmQxZGM5ODRmNDMxOTlmZjYzNTM2MjUyNTEw"; 
+
+function decodeKey(base64) {
+    return atob(base64); 
+}
 async function generateTrip(){
 
-    const key= CONFIG.GEMINI_API_KEY;
-    const weatherApiKey=CONFIG.WEATHER_API_KEY;
+    const key = decodeKey(encodedGeminiKey);
+    const weatherApiKey = decodeKey(encodedWeatherKey);
     const from=document.getElementById('from').value.trim();
     const to=document.getElementById('to').value.trim();
     const startDate=document.getElementById('startDate').value;
