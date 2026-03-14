@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Super Travel Planner 🚀</title>
+<title>AI Travel Planner 🚀</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -518,21 +518,20 @@ button{
         <i class="fas fa-bars"></i> My Account
     </button>
 
-    <div id="menu-panel" style="display: none; position: absolute; right: 0; top: 45px; width: 300px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; overflow: hidden; border: 1px solid #eee;">
-        <div style="padding: 15px; background: #00bfa5; color: white; text-align: center; font-weight: bold;">
-            Manage Your Trips
-        </div>
-        
-        <div id="recent-trips-list" style="max-height: 300px; overflow-y: auto; padding: 10px; text-align: left;">
-            <p style="text-align: center; color: #999;">Loading trips...</p>
-        </div>
+<div id="menu-panel" style="display: none; position: absolute; right: 0; top: 45px; width: 220px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; overflow: hidden; border: 1px solid #eee; text-align: left;">
+    <button onclick="changePassword()" style="width: 100%; padding: 12px; border: none; background: red; text-align: left; cursor: pointer; border-bottom: 1px solid #f5f5f5;"><i class="fas fa-key" style="margin-right: 8px;"></i> Password Change</button>
+    <button onclick="openTripModal()" style="width: 100%; padding: 12px; border: none; background: red; text-align: left; cursor: pointer; border-bottom: 1px solid #f5f5f5;"><i class="fas fa-list" style="margin-right: 8px;"></i> Trip List</button>
+    <button id="logout-btn" style="width: 100%; padding: 12px; border: none; background: #fff; color: #d32f2f; text-align: left; cursor: pointer; font-weight: bold;"><i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> Logout</button>
+</div>
 
-        <hr style="margin: 0; border: 0; border-top: 1px solid #eee;">
-        
-        <button id="logout-btn" style="width: 100%; padding: 12px; border: none; background: #fff; color: #d32f2f; cursor: pointer; font-weight: bold; transition: 0.3s;">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
+<div id="tripModal" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
+    <div style="background: white; margin: 5% auto; padding: 20px; border-radius: 15px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; position: relative;">
+        <span onclick="closeTripModal()" style="position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: #666;">&times;</span>
+        <h2 style="margin-bottom: 20px; color: #00695c;"><i class="fas fa-plane-departure"></i> My Saved Journeys</h2>
+        <div id="modal-trips-container">
+            </div>
     </div>
+</div>
 </div>
 <h1><i class="fas fa-route"></i> AI Travel Planner 🌍</h1>
 <p style="text-align: center;margin-bottom: 30px;">Plan your perfect trip with advanced AI features.</p>
@@ -687,6 +686,12 @@ button{
 
   window.auth = auth;
   window.db = db;
+window.downloadPDF = downloadPDF;
+window.exportTripToCalendar = exportTripToCalendar;
+window.sharePlan = sharePlan;
+// window.convertCurrency = convertCurrency;
+window.addExpense = addExpense;
+window.removeExpense = removeExpense;
 
 import { 
     createUserWithEmailAndPassword, 
@@ -703,7 +708,8 @@ import {
     query, 
     where, 
     orderBy, 
-    serverTimestamp 
+    serverTimestamp,
+    doc, deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
@@ -1061,7 +1067,32 @@ Check the full plan details below:
 /* ---------------------------------
     7. CURRENCY CONVERTER (💰)
     --------------------------------- */
-// Approximate rates BDT to 1 unit of target currency (based on October 2025 search data)
+const CURRENCY_DATA = {
+    "USD": "United States Dollar", "EUR": "Euro", "GBP": "British Pound",
+    "INR": "Indian Rupee", "SAR": "Saudi Riyal", "AED": "UAE Dirham",
+    "MYR": "Malaysian Ringgit", "THB": "Thai Baht", "SGD": "Singapore Dollar",
+    "CAD": "Canadian Dollar", "AUD": "Australian Dollar", "JPY": "Japanese Yen",
+    "CNY": "Chinese Yuan", "QAR": "Qatari Rial", "KWD": "Kuwaiti Dinar",
+    "OMR": "Omani Rial", "PKR": "Pakistani Rupee", "TRY": "Turkish Lira",
+    "BDT": "Bangladeshi Taka", "LKR": "Sri Lankan Rupee", "NPR": "Nepalese Rupee"
+};
+
+function populateCurrencyList() {
+    const list = document.getElementById('currencyList');
+    if (list) {
+        list.innerHTML = ""; 
+        Object.entries(CURRENCY_DATA).forEach(([code, name]) => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = `${name} (${code})`;
+            list.appendChild(option);
+        });
+        console.log("Currency dropdown populated!"); // কনসোলে চেক করার জন্য
+    } else {
+        console.error("currencyList element not found yet.");
+    }
+}
+
 const EXCHANGE_RATES = {
     "USD": { rate: 0.0085, symbol: '$' }, 
     "EUR": { rate: 0.0078, symbol: '€' },
@@ -1070,29 +1101,40 @@ const EXCHANGE_RATES = {
     "MYR": { rate: 0.034, symbol: 'RM' } // Malaysian Ringgit
 };
 
-function convertCurrency() {
-    const amountBDT = parseFloat(document.getElementById('bdtAmount').value);
-    const targetCurrency = document.getElementById('targetCurrency').value;
+ window.convertCurrency = async function(mode) {
+    const amount = parseFloat(document.getElementById('convAmount').value);
+    const currencyCode = document.getElementById('convCurrency').value.toUpperCase();
     const resultDisplay = document.getElementById('conversionResult');
 
-    if (isNaN(amountBDT) || amountBDT <= 0) {
-        resultDisplay.textContent = "Please enter a valid BDT amount.";
-        return;
-    }
-    if (!EXCHANGE_RATES[targetCurrency]) {
-        resultDisplay.textContent = "Selected currency not supported.";
+    if (isNaN(amount) || !currencyCode) {
+        showToast("Enter amount and valid currency code", "error");
         return;
     }
 
-    const { rate, symbol } = EXCHANGE_RATES[targetCurrency];
-    const convertedAmount = (amountBDT * rate).toFixed(2);
+    resultDisplay.innerHTML = "Converting...";
 
-    resultDisplay.innerHTML = `
-        <p><strong>${amountBDT.toLocaleString()} BDT</strong> is approximately:</p>
-        <p style="margin:5px 0; font-size:1.1rem;"><strong>${targetCurrency}:</strong> ${convertedAmount} ${symbol}</p>
-        <p style="font-size:0.8rem; color:#777;">*Rates are approximate and subject to change.</p>
-    `;
-}
+    try {
+        // ফ্রী API ব্যবহার করে লাইভ রেট আনা
+        const response = await fetch(`https://open.er-api.com/v6/latest/BDT`);
+        const data = await response.json();
+        
+        if (data.result === "success") {
+            const rate = data.rates[currencyCode];
+            if (!rate) throw new Error("Currency not found");
+
+            if (mode === 'toAny') {
+                const converted = (amount * rate).toFixed(2);
+                resultDisplay.innerHTML = `${amount} BDT = ${converted} ${currencyCode}`;
+            } else {
+                const converted = (amount / rate).toFixed(2);
+                resultDisplay.innerHTML = `${amount} ${currencyCode} = ${converted} BDT`;
+            }
+        }
+    } catch (error) {
+        resultDisplay.innerHTML = "Error: Check currency code or connection.";
+        console.error(error);
+    }
+};
 
 /* ---------------------------------
     8. DISPLAY FUNCTION (FIXED: [object Object] & Map Link)
@@ -1155,6 +1197,11 @@ function displayTrip(parsedTripData, allWeatherData) {
         // Attempt to stringify and clean the object if it's not a string
         conceptualCost = JSON.stringify(conceptualCost).replace(/[{}"\\]/g, ' ').trim() || 'N/A';
     }
+
+    // displayTrip ফাংশনের ভেতর একদম শেষে এটি যোগ করুন
+    setTimeout(() => {
+        populateCurrencyList();
+    }, 500); // ০.৫ সেকেন্ড অপেক্ষা করবে যাতে HTML জেনারেট হতে পারে
     
     costTransportCard.innerHTML = `
         <h3><i class="fas fa-hand-holding-usd"></i> Estimated Total Cost ৳</h3>
@@ -1298,28 +1345,29 @@ outputSection.appendChild(itineraryCard);
     `;
 
     // Currency Converter
-    toolsCard.innerHTML += `
-        <h3 style="margin-top: 2rem;"><i class="fas fa-money-bill-transfer"></i> Dynamic Currency Converter (BDT → Selected)</h3>
+toolsCard.innerHTML += `
+    <h3 style="margin-top: 2rem;"><i class="fas fa-money-bill-transfer"></i> Universal Currency Converter</h3>
+    <div style="display:flex; flex-direction:column; gap:15px; background: #f1f8f7; padding: 15px; border-radius: 12px;">
+        
         <div style="display:flex; gap:10px; align-items:center;">
-            <input type="number" id="bdtAmount" placeholder="Amount in BDT" style="width: 30%; padding: 10px;">
+            <input type="number" id="convAmount" placeholder="Amount" style="width: 45%; padding: 12px; border-radius: 8px; border: 1px solid #ccc;">
             
-            <div class="icon-input" style="width: 30%;">
-                <i class="fas fa-exchange-alt" style="left: 8px;"></i>
-                <select id="targetCurrency" style="width: 100%; padding-left: 35px;">
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="INR">INR - Indian Rupee</option>
-                    <option value="THB">THB - Thai Baht</option>
-                    <option value="MYR">MYR - Malaysian Ringgit</option>
-                </select>
+            <div style="width: 45%;">
+                <input list="currencyList" id="convCurrency" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc;" placeholder="Search Country/Code..." ...>
+                <datalist id="currencyList"></datalist>
             </div>
-            
-            <button onclick="convertCurrency()" style="background: #3f51b5; flex:none; width:auto; padding: 10px 20px; margin:0;"><i class="fas fa-calculator"></i> Convert</button>
         </div>
-        <div id="conversionResult" style="margin-top: 10px; padding: 10px; border: 1px dashed #607d8b; border-radius: 5px;">
-            Enter an amount to see conversion.
+
+        <div style="display:flex; gap:10px;">
+            <button onclick="convertCurrency('toAny')" style="flex:1; background: #00897b; margin:0; font-size: 0.9rem;">BDT ➜ Foreign</button>
+            <button onclick="convertCurrency('toBDT')" style="flex:1; background: #3f51b5; margin:0; font-size: 0.9rem;">Foreign ➜ BDT</button>
         </div>
-    `;
+        
+        <div id="conversionResult" style="padding: 10px; border: 1px dashed #607d8b; border-radius: 5px; background: #fff; text-align: center; font-weight: bold; color: #00695c;">
+            Enter amount and select currency.
+        </div>
+    </div>
+`;
 
     // Expense Tracker
     toolsCard.innerHTML += `
@@ -1557,14 +1605,33 @@ document.addEventListener('click', (e) => {
 // loadTripList function-ti ager motoi thakbe, kintu View button-e click korle jeno menu-ta bondho hoy
 // viewSavedPlan function-e ei line-ti add korun:
 window.viewSavedPlan = function(id) {
-    const trip = window[`trip_data_${id}`];
-    if(trip) {
-        menuPanel.style.display = 'none'; // Plan view korle menu bondho hobe
-        displayTrip(trip); 
-        showToast("Loading plan...");
+    const savedData = window[`trip_full_${id}`];
+    if(savedData) {
+        const menuPanel = document.getElementById('menu-panel');
+        if(menuPanel) menuPanel.style.display = 'none';
+        
+        // --- ফর্মের ডেটা পুনরায় পূরণ করা ---
+        if(savedData.meta) {
+            if(document.getElementById('from')) document.getElementById('from').value = savedData.meta.from || "";
+            if(document.getElementById('to')) document.getElementById('to').value = savedData.meta.to || "";
+            if(document.getElementById('startDate')) document.getElementById('startDate').value = savedData.meta.startDate || "";
+            if(document.getElementById('endDate')) document.getElementById('endDate').value = savedData.meta.endDate || "";
+            if(document.getElementById('travelers')) document.getElementById('travelers').value = savedData.meta.travelers || "1";
+            if(document.getElementById('budget')) document.getElementById('budget').value = savedData.meta.budget || "";
+        }
+        
+        // গ্লোবাল ভেরিয়েবল আপডেট করা যাতে PDF/Share কাজ করে
+        currentTripData = savedData.trip; 
+        currentGeneratedTrip = savedData.trip;
+
+        // UI ডিসপ্লে করা
+        displayTrip(savedData.trip, savedData.weather); 
+        
+        showToast("Plan Loaded into Form & View");
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 };
+
 document.getElementById('logout-btn').addEventListener('click', () => {
     signOut(auth).then(() => {
         showToast("Logged out successfully");
@@ -1576,114 +1643,210 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 
 
 
-async function autoSaveTrip(trip, weather) { // weather প্যারামিটার যোগ করলাম
+async function autoSaveTrip(trip, weather) {
     const user = auth.currentUser;
     if (!user) return;
 
+    // ফর্মের অতিরিক্ত ডেটা সংগ্রহ
+    const metaInfo = {
+        from: document.getElementById('from').value,
+        to: document.getElementById('to').value,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        travelers: document.getElementById('travelers').value,
+        budget: document.getElementById('budget').value
+    };
+
     try {
-        const destination = document.getElementById('to').value || "Unknown Destination";
         await addDoc(collection(db, "user_trips"), {
             userId: user.uid,
             tripData: trip,
-            weatherData: weather, // ওয়েদার ডেটাও সেভ করছি
-            destination: destination,
+            weatherData: weather,
+            meta: metaInfo, // এখানে সব তথ্য সেভ হচ্ছে
+            destination: metaInfo.to || "Unknown",
             createdAt: serverTimestamp()
         });
-        showToast("Trip saved to your history! ✅");
+        showToast("Trip and form data saved! ✅");
         loadTripList();
     } catch (e) {
         console.error("Save error:", e);
     }
 }
-     const user = auth.currentUser;
+    //  const user = auth.currentUser;
     //  if (!user) {
     //     console.error("User not logged in!");
     //     return;
     // }
 
-    try {
-        const destination = document.getElementById('to').value || "Unknown Destination";
+    // try {
+    //     const destination = document.getElementById('to').value || "Unknown Destination";
         
-        // নিশ্চিত করুন db এবং collection ঠিকমতো কাজ করছে
-        const tripCollection = collection(db, "user_trips");
+    //     const tripCollection = collection(db, "user_trips");
         
-        const docRef = await addDoc(tripCollection, {
-            userId: user.uid,
-            tripData: trip,
-            destination: destination,
-            createdAt: serverTimestamp()
-        });
+    //     const docRef = await addDoc(tripCollection, {
+    //         userId: user.uid,
+    //         tripData: trip,
+    //         destination: destination,
+    //         createdAt: serverTimestamp()
+    //     });
         
-        console.log("Trip saved with ID: ", docRef.id);
-        showToast("Trip saved to your history! ✅");
-        loadTripList(); 
-    } catch (e) {
-        // এখানে আপনি এরর কোড দেখতে পাবেন (যেমন: 'permission-denied')
-        console.error("Save error full detail:", e);
-        showToast("Save failed! Check console.", "error");
-    }
+    //     console.log("Trip saved with ID: ", docRef.id);
+    //     showToast("Trip saved to your history! ✅");
+    //     loadTripList(); 
+    // } catch (e) {
+    // }
 
   
 
+// মোডাল ওপেন ও ক্লোজ ফাংশন
+window.openTripModal = function() {
+    document.getElementById('tripModal').style.display = 'block';
+    document.getElementById('menu-panel').style.display = 'none'; // মেনু বন্ধ করে দিবে
+    loadTripList(); // ফ্রেশ ডেটা লোড করবে
+};
+
+window.closeTripModal = function() {
+    document.getElementById('tripModal').style.display = 'none';
+};
+
+// সংশোধিত loadTripList
 async function loadTripList() {
     const user = auth.currentUser;
-    const listContainer = document.getElementById('recent-trips-list');
-    
-    if (!user || !listContainer) return;
+    const container = document.getElementById('modal-trips-container');
+    if (!user || !container) return;
+
+    container.innerHTML = "<p>Loading your trips...</p>";
 
     try {
-        // ইনডেক্স না থাকলে এই লাইনটি এরর দিবে
-        const q = query(
-            collection(db, "user_trips"), 
-            where("userId", "==", user.uid), 
-            orderBy("createdAt", "desc")
-        );
-        
+        const q = query(collection(db, "user_trips"), where("userId", "==", user.uid), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
-        let html = "";
         
         if (snapshot.empty) {
-            listContainer.innerHTML = "<p style='padding:10px; font-size:13px; color:#999;'>No saved trips found.</p>";
+            container.innerHTML = "<p>No trips found.</p>";
             return;
         }
 
+        let tableHtml = `
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
+                <thead>
+                    <tr style="background: #e0f2f1; text-align: left;">
+                        <th style="padding: 12px; border: 1px solid #ddd;">Route (From - To)</th>
+                        <th style="padding: 12px; border: 1px solid #ddd;">Date & Budget</th>
+                        <th style="padding: 12px; border: 1px solid #ddd;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
         snapshot.forEach(doc => {
             const data = doc.data();
-            html += `
-                <div class="saved-item" style="...">
-                    <span>${data.destination}</span>
-                    <button onclick="viewSavedPlan('${doc.id}')" style="...">View</button>
-                </div>
-            `;
-            // এখানে trip এবং weather দুটোই স্টোর করে রাখুন
+            const meta = data.meta || {}; // আপনার সেভ করা meta ডেটা
+            
+            // উইন্ডোতে ডেটা রাখা যাতে View বাটনে ক্লিক করলে পায়
             window[`trip_full_${doc.id}`] = {
                 trip: data.tripData,
-                weather: data.weatherData || [] // যদি আগে না থাকে তবে খালি অ্যারে
+                weather: data.weatherData || [],
+                meta: meta
             };
+
+            tableHtml += `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 12px; border: 1px solid #eee;">
+                        <strong>${meta.from || 'N/A'}</strong> <i class="fas fa-arrow-right" style="font-size:10px;"></i> <strong>${meta.to || data.destination}</strong>
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #eee;">
+                        <span style="display:block; font-size:12px; color:#555;"><i class="far fa-calendar"></i> ${meta.startDate || 'N/A'}</span>
+                        <span style="display:block; font-size:12px; color:#00796b; font-weight:bold;"><i class="fas fa-wallet"></i> ${meta.budget || '0'} BDT</span>
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #eee; text-align: center;">
+                        <button onclick="viewSavedPlan('${doc.id}'); closeTripModal();" 
+                            style="background: #00897b; color: white; border: none; padding: 6px 15px; border-radius: 5px; cursor: pointer; transition: 0.3s;">
+                            View
+                        </button>
+                        <button onclick="deleteTrip('${doc.id}')" 
+                            style="background: #f44336; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; margin-left: 5px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
         });
-        listContainer.innerHTML = html;
-        
+
+        tableHtml += `</tbody></table>`;
+        container.innerHTML = tableHtml;
+
     } catch (error) {
         console.error("Load Trip Error:", error);
-        // ইনডেক্স এরর হলে এখানে লিঙ্কসহ মেসেজ দেখাবে
-        if (error.message.includes("index")) {
-            listContainer.innerHTML = "<p style='color:red; font-size:11px; padding:10px;'>Index needed. Check browser console for link.</p>";
-        }
+        container.innerHTML = "<p style='color:red;'>Failed to load trips. Check console for details.</p>";
     }
 }
 
-// ৩. লিস্ট থেকে ভিউ করার ফাংশন
+window.deleteTrip = async function(id) {
+    if(confirm("Are you sure you want to delete this trip?")) {
+        try {
+            // 'db' আপনার firestore ইনট্যান্স, 'user_trips' কালেকশন নাম
+            const docRef = doc(db, "user_trips", id);
+            await deleteDoc(docRef);
+            
+            showToast("Trip deleted! 🗑️");
+            
+            // উইন্ডো থেকে ডেটা মুছে ফেলা যাতে 'Data not found' না আসে
+            delete window[`trip_full_${id}`];
+            
+            // লিস্ট রিফ্রেশ করা
+            loadTripList(); 
+        } catch (error) {
+            console.error("Delete Error:", error);
+            showToast("Delete failed: " + error.message, "error");
+        }
+    }
+};
+// পাসওয়ার্ড চেঞ্জ ফাংশন (স্যাম্পল)
+window.changePassword = function() {
+    const email = auth.currentUser.email;
+    if(confirm("Send password reset email to " + email + "?")) {
+        auth.sendPasswordResetEmail(email).then(() => {
+            showToast("Reset email sent!");
+        }).catch(err => showToast(err.message, "error"));
+    }
+};
+
 window.viewSavedPlan = function(id) {
+    // উইন্ডো অবজেক্ট থেকে ডেটা নেওয়া
     const savedData = window[`trip_full_${id}`];
-    if(savedData) {
+    
+    if(!savedData) {
+        showToast("Data not found!", "error");
+        return;
+    }
+
+    try {
         const menuPanel = document.getElementById('menu-panel');
         if(menuPanel) menuPanel.style.display = 'none';
         
-        // এখন দুটো ডেটাই displayTrip-এ পাঠান
-        displayTrip(savedData.trip, savedData.weather); 
+        // ১. ফর্মের ডেটা পুনরায় ইনপুট ফিল্ডে বসানো (যদি meta থাকে)
+        if(savedData.meta) {
+            if(document.getElementById('from')) document.getElementById('from').value = savedData.meta.from || "";
+            if(document.getElementById('to')) document.getElementById('to').value = savedData.meta.to || "";
+            if(document.getElementById('startDate')) document.getElementById('startDate').value = savedData.meta.startDate || "";
+            if(document.getElementById('endDate')) document.getElementById('endDate').value = savedData.meta.endDate || "";
+            if(document.getElementById('travelers')) document.getElementById('travelers').value = savedData.meta.travelers || "1";
+            if(document.getElementById('budget')) document.getElementById('budget').value = savedData.meta.budget || "";
+        }
         
-        showToast("Loading plan...");
+ 
+        window.currentTripData = savedData.tripData || savedData.trip; 
+        window.currentGeneratedTrip = savedData.tripData || savedData.trip;
+
+        // ৩. রেজাল্ট ডিসপ্লে করা
+        displayTrip(window.currentTripData, savedData.weatherData || savedData.weather); 
+        
+        showToast("Plan Loaded into Form & View");
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (error) {
+        console.error("View Error:", error);
+        showToast("Error loading data", "error");
     }
 };
 
